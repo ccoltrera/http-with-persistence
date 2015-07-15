@@ -14,7 +14,6 @@ app.route("/api/user/:id")
       readstream.pipe(res);
     });
     readstream.on("error", function(err) {
-      console.log(err);
       res.sendStatus(404);
     });
   })
@@ -42,13 +41,52 @@ app.route("/api/user/:id")
   })
   .put(function(req, res, next) {
     var filePath = __dirname + "/data/" + req.params.id + ".json";
-    fs.open(filePath, "w", function(err, fd) {
-
+    fs.open(filePath, "r+", function(err, fd) {
+      if (err) {
+        res.sendStatus(400);
+      } else {
+        fs.writeFile(filePath, JSON.stringify(req.body), function(err) {
+          if (err) {
+            res.sendStatus(500);
+          } else {
+            res.sendStatus(200);
+          }
+        });
+      }
+    });
+  })
+  .patch(function(req, res, next) {
+    var filePath = __dirname + "/data/" + req.params.id + ".json";
+    fs.open(filePath, "r+", function(err, fd) {
+      if (err) {
+        res.sendStatus(400);
+      } else {
+        fs.readFile(filePath, function(err, data) {
+          var userObject = JSON.parse(data.toString());
+          var userUpdate = req.body;
+          for (var each in userUpdate) {
+            userObject[each] = userUpdate[each];
+          }
+          fs.writeFile(filePath, JSON.stringify(userObject), function(err) {
+            if (err) {
+              res.sendStatus(500);
+            } else {
+              res.sendStatus(200);
+            }
+          });
+        });
+      }
+    });
+  })
+  .delete(function(req, res, next) {
+    var filePath = __dirname + "/data/" + req.params.id + ".json";
+    fs.unlink(filePath, function(err) {
+      if (err) {
+        res.sendStatus(400);
+      } else {
+        res.sendStatus(200);
+      }
     });
   });
-
-// app.listen(8080, function() {
-//   console.log("Server runnnig on 8080")
-// });
 
 module.exports = app;
