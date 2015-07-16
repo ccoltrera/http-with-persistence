@@ -7,7 +7,7 @@ var app = express();
 app.use(bodyParser.json());
 
 //App only handles requests to /api/user/username
-app.route("/api/user/:id")
+app.route("/api/users/:id")
   //GET == READ
   .get(function(req, res, next) {
     //Attempts to create a read stream, to be used to stream resource to client
@@ -52,12 +52,19 @@ app.route("/api/user/:id")
       }
     });
   })
-  //PUT == UPDATE (with complete overwrite)
+  //PUT == UPDATE (with complete overwrite) or CREATE (if resource does not exist)
   .put(function(req, res, next) {
     var filePath = __dirname + "/data/" + req.params.id + ".json";
-    fs.open(filePath, "r+", function(err, fd) {
+    //Checks if file exists, so that correct status code can be sent (200 if raplaced, 201 if created)
+    fs.open(filePath, "r", function(err, fd) {
       if (err) {
-        res.sendStatus(400);
+        fs.writeFile(filePath, JSON.stringify(req.body), function(err) {
+          if (err) {
+            res.sendStatus(500);
+          } else {
+            res.sendStatus(201);
+          }
+        });
       } else {
         fs.writeFile(filePath, JSON.stringify(req.body), function(err) {
           if (err) {
@@ -69,7 +76,7 @@ app.route("/api/user/:id")
       }
     });
   })
-  //PUT == UPDATE (without complete overwrite)
+  //PATCH == UPDATE (without complete overwrite)
   .patch(function(req, res, next) {
     var filePath = __dirname + "/data/" + req.params.id + ".json";
     fs.open(filePath, "r+", function(err, fd) {
@@ -104,5 +111,7 @@ app.route("/api/user/:id")
       }
     });
   });
+
+
 
 module.exports = app;

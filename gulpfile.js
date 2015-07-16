@@ -5,7 +5,7 @@ var mocha = require("gulp-mocha");
 var jshint = require("gulp-jshint");
 var jscs = require("gulp-jscs");
 
-gulp.task("default", ["watch"]);
+gulp.task("default", ["test","lint","jscs"]);
 
 gulp.task("test", function() {
   return gulp.src("./test/*test.js")
